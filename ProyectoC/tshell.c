@@ -1,6 +1,7 @@
 void clearScreen();
 
 void printString(char* string);
+void readString(char* buffer);
 void readSector(char* buffer, int sector);
 int div(int a, int b);
 int mod(int a, int b);
@@ -10,9 +11,57 @@ void executeProgram(char* name, int segment);
 void terminate();
 
 main() {
+  char shellInput[80];
+  char fileInputType[75];
+  char fileInputTypeBuffer[13312];
+  char fileInputExecute[72];
+  int i;
   clearScreen();
-  executeProgram("tshell", 0x2000);
-  for(;;){}
+
+  for(;;){
+    printString("CaiOs Shell> \0");
+    readString(shellInput);
+
+    if(shellInput[0] == 'c'
+    && shellInput[1] == 'l'
+    && shellInput[2] == 'e'
+    && shellInput[3] == 'a'
+    && shellInput[4] == 'r')
+    {
+     clearScreen();
+    }
+    else if(shellInput[0] == 't'
+    && shellInput[1] == 'y'
+    && shellInput[2] == 'p'
+    && shellInput[3] == 'e')
+    {
+      for(i=0;i<75;i++){
+       fileInputType[i] = shellInput[i+5];
+      }
+      clearScreen();
+      readFile(fileInputType,fileInputTypeBuffer);
+      printString(fileInputTypeBuffer);
+    }
+    else if(shellInput[0] == 'e'
+    && shellInput[1] == 'x'
+    && shellInput[2] == 'e'
+    && shellInput[3] == 'c'
+    && shellInput[4] == 'u'
+    && shellInput[5] == 't'
+    && shellInput[6] == 'e')
+    {
+      for(i=0;i<72;i++){
+        fileInputExecute[i] = shellInput[i+8];
+      }
+      clearScreen();
+      executeProgram(fileInputExecute,0x2000);
+    }
+    else
+    {
+     printString("\r\nCaiOs Shell> Unknown command: \0");
+     printString(shellInput);
+    }
+  }
 }
 
 void clearScreen()
@@ -30,6 +79,36 @@ void printString(char* string){
     int currentChar = string[i];
     interrupt(0x10, 0xe*256+currentChar, 0, 0, 0);
     i++;
+  }
+}
+
+void readString(char* buffer) {
+  int hexValueZero = 0x0;
+  int hexValueEnter = 0xD;
+  int hexValueBackspace = 0x8;
+  int hexValueBackslashN = 0xA;
+  int hexValueBackslashR = 0xD;
+  int bufferCursor = 0;
+  int currentHexValue;
+
+  for(;;){
+    currentHexValue = interrupt(0x16,0,0,0,0);
+    if(currentHexValue == hexValueEnter){
+      buffer[bufferCursor++] = hexValueBackslashR;
+      buffer[bufferCursor++] = hexValueBackslashN;
+      buffer[bufferCursor] = hexValueZero;
+      return;
+    } else if(currentHexValue == hexValueBackspace && bufferCursor > 0) {
+      buffer[bufferCursor--] = hexValueZero;
+      interrupt(0x10,0xe*256+hexValueBackspace,0,0,0);
+      bufferCursor++;
+      interrupt(0x10,0xe*256+hexValueZero,0,0,0);
+      bufferCursor--;
+      interrupt(0x10,0xe*256+hexValueBackspace,0,0,0);
+    } else {
+      buffer[bufferCursor++] = currentHexValue;
+      interrupt(0x10, 0xe*256+currentHexValue, 0, 0, 0);
+    }
   }
 }
 
