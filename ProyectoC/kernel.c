@@ -89,7 +89,7 @@ void readFile(char* fileName,char* buffer){
 
   if(foundFile!=1) {
     printString("File Not Found\0");
-		return;
+    return;
   }
 
   fileIndex = (fileIndex*bytesInFile)+bytesForName;
@@ -107,14 +107,14 @@ void readFile(char* fileName,char* buffer){
 }
 
 void executeProgram(char* name, int segment){
-	int i;
-	char buffer[13312];
+  int i;
+  char buffer[13312];
 
-	readFile(name, buffer);
-	for (i=0; i<13312;i++){
-		putInMemory(segment,i,buffer[i]);
-	}
-	launchProgram(segment);
+  readFile(name, buffer);
+  for (i=0; i<13312;i++){
+    putInMemory(segment,i,buffer[i]);
+  }
+  launchProgram(segment);
 }
 
 void terminate(){
